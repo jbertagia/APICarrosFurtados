@@ -1,0 +1,37 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\jbert\\OneDrive\\Área de Trabalho\\UP\\05 - 3 Semestre\\03 - Topicos Especiais de Sistema\\A1\\ApiCadastrarVeiculo\\wwwroot\\banner.jpg",
+      "PackagePath": "staticwebassets\\banner.jpg"
+    },
+    {
+      "Id": "C:\\Users\\jbert\\OneDrive\\Área de Trabalho\\UP\\05 - 3 Semestre\\03 - Topicos Especiais de Sistema\\A1\\ApiCadastrarVeiculo\\wwwroot\\estilo.css",
+      "PackagePath": "staticwebassets\\estilo.css"
+    },
+    {
+      "Id": "C:\\Users\\jbert\\OneDrive\\Área de Trabalho\\UP\\05 - 3 Semestre\\03 - Topicos Especiais de Sistema\\A1\\ApiCadastrarVeiculo\\wwwroot\\index.html",
+      "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.ApiCadastrarVeiculo.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.ApiCadastrarVeiculo.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.build.ApiCadastrarVeiculo.props",
+      "PackagePath": "build\\ApiCadastrarVeiculo.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.buildMultiTargeting.ApiCadastrarVeiculo.props",
+      "PackagePath": "buildMultiTargeting\\ApiCadastrarVeiculo.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.buildTransitive.ApiCadastrarVeiculo.props",
+      "PackagePath": "buildTransitive\\ApiCadastrarVeiculo.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

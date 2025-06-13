@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>API de cadastro de veículos roubados</title>
+    <link rel="stylesheet" href="estilo.css">
+</head>
+
+<body>
+    <h1>Cadastro de Veículos Roubados</h1>
+
+    <div id="contador" class="contador"></div>
+
+    <div class="filtro">
+        <label for="filtro-busca">Buscar:</label>
+        <input type="text" id="filtro-busca" placeholder="Digite para buscar..." />
+        
+        <label for="filtro-status">Filtrar por status:</label>
+        <select id="filtro-status">
+            <option value="Todos">Todos</option>
+            <option value="Roubado">Roubado</option>
+            <option value="Recuperado">Recuperado</option>
+        </select>
+        <button id="exportarCSV">Exportar CSV</button>
+    </div>
+
+    <div class="formulario">
+        <form id="form" class="linha-horizontal">
+            <input type="hidden" id="id" />
+            <input type="text" id="modelo" placeholder="Modelo" required />
+            <input type="text" id="marca" placeholder="Marca" required />
+            <input type="text" id="cor" placeholder="Cor" required />
+            <input type="text" id="placa" placeholder="Placa" required />
+            <input type="text" id="chassis" placeholder="Chassis" required />
+            <input type="number" id="valor" placeholder="Valor (R$)" required />
+            <input type="number" id="diasRoubado" placeholder="Dias Roubado" required />
+            <select id="status">
+                <option value="Roubado">Roubado</option>
+                <option value="Recuperado">Recuperado</option>
+            </select>
+            <button type="submit">Cadastrar</button>
+        </form>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Modelo</th>
+                <th>Marca</th>
+                <th>Cor</th>
+                <th>Placa</th>
+                <th>Chassis</th>
+                <th>Valor</th>
+                <th>Dias Roubado</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="tabelaVeiculos"></tbody>
+    </table>
+
+    <div id="modal-calculo" class="modal">
+        <div class="modal-conteudo">
+            <span class="fechar" onclick="document.getElementById('modal-calculo').style.display='none'">&times;</span>
+            <h2>Depreciação Estimada</h2>
+            <p id="resultado-calculo"></p>
+        </div>
+    </div>
+
+    <div id="modal-edicao" class="modal">
+        <div class="modal-conteudo">
+            <span class="fechar" onclick="document.getElementById('modal-edicao').style.display='none'">&times;</span>
+            <h2>Editar Veículo</h2>
+            <form id="form-edicao">
+                <input type="hidden" id="edit-id" />
+                <input type="text" id="edit-modelo" placeholder="Modelo" required />
+                <input type="text" id="edit-marca" placeholder="Marca" required />
+                <input type="text" id="edit-cor" placeholder="Cor" required />
+                <input type="text" id="edit-placa" placeholder="Placa" required />
+                <input type="text" id="edit-chassis" placeholder="Chassis" required />
+                <input type="number" id="edit-valor" placeholder="Valor (R$)" required />
+                <input type="number" id="edit-diasRoubado" placeholder="Dias Roubado" required />
+                <select id="edit-status">
+                    <option value="Roubado">Roubado</option>
+                    <option value="Recuperado">Recuperado</option>
+                </select>
+                <button type="submit">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const API = "/api/veiculos";
+            const tabela = document.getElementById("tabelaVeiculos");
+            const form = document.getElementById("form");
+            const filtroStatus = document.getElementById("filtro-status");
+            const filtroBusca = document.getElementById("filtro-busca");
+            const contador = document.getElementById("contador");
+            let dadosExportados = [];
+            let idParaExcluir = null;
+
+            const carregar = async () => {
+                const res = await fetch(API);
+                let veiculos = await res.json();
+
+                const statusSelecionado = filtroStatus.value;
+                const termoBusca = filtroBusca.value.toLowerCase();
+
+                if (statusSelecionado !== "Todos") {
+                    veiculos = veiculos.filter(v => v.status === statusSelecionado);
+                }
+                if (termoBusca) {
+                    veiculos = veiculos.filter(v =>
+                        v.modelo.toLowerCase().includes(termoBusca) ||
+                        v.marca.toLowerCase().includes(termoBusca) ||
+                        v.cor.toLowerCase().includes(termoBusca) ||
+                        v.placa.toLowerCase().includes(termoBusca) ||
+                        v.chassis.toLowerCase().includes(termoBusca) ||
+                        v.status.toLowerCase().includes(termoBusca)
+                    );
+                }
+
+                dadosExportados = veiculos;
+
+                const total = veiculos.length;
+                const roubados = veiculos.filter(v => v.status === "Roubado").length;
+                const recuperados = veiculos.filter(v => v.status === "Recuperado").length;
+                contador.textContent = `Total: ${total} | Roubados: ${roubados} | Recuperados: ${recuperados}`;
+
+                tabela.innerHTML = "";
+                veiculos.forEach(v => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+            <td>${v.id}</td>
+            <td>${v.modelo}</td>
+            <td>${v.marca}</td>
+            <td>${v.cor}</td>
+            <td>${v.placa}</td>
+            <td>${v.chassis}</td>
+            <td>R$ ${v.valor.toFixed(2)}</td>
+            <td>${v.diasRoubado}</td>
+            <td>${v.status}</td>
+            <td>
+              <button onclick='abrirEdicao(${JSON.stringify(v).replace(/'/g, "&apos;")})'>Editar</button>
+              <button onclick="calcularDepreciacao(${v.valor}, ${v.diasRoubado})">Calcular</button>
+              <button onclick="confirmarExclusao(${v.id})">Excluir</button>
+            </td>`;
+                    tabela.appendChild(tr);
+                });
+            };
+
+            window.confirmarExclusao = (id) => {
+                if (confirm("Tem certeza que deseja excluir este veículo?")) {
+                    fetch(`${API}/${id}`, { method: "DELETE" }).then(carregar);
+                }
+            };
+
+            window.abrirEdicao = (v) => {
+                document.getElementById("edit-id").value = v.id;
+                document.getElementById("edit-modelo").value = v.modelo;
+                document.getElementById("edit-marca").value = v.marca;
+                document.getElementById("edit-cor").value = v.cor;
+                document.getElementById("edit-placa").value = v.placa;
+                document.getElementById("edit-chassis").value = v.chassis;
+                document.getElementById("edit-valor").value = v.valor;
+                document.getElementById("edit-diasRoubado").value = v.diasRoubado;
+                document.getElementById("edit-status").value = v.status;
+                document.getElementById("modal-edicao").style.display = "block";
+            };
+
+            document.getElementById("form-edicao").addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const id = document.getElementById("edit-id").value;
+                const dadosAtualizados = {
+                    modelo: document.getElementById("edit-modelo").value,
+                    marca: document.getElementById("edit-marca").value,
+                    cor: document.getElementById("edit-cor").value,
+                    placa: document.getElementById("edit-placa").value,
+                    chassis: document.getElementById("edit-chassis").value,
+                    valor: parseFloat(document.getElementById("edit-valor").value),
+                    diasRoubado: parseInt(document.getElementById("edit-diasRoubado").value),
+                    status: document.getElementById("edit-status").value
+                };
+                await fetch(`${API}/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(dadosAtualizados)
+                });
+                document.getElementById("modal-edicao").style.display = "none";
+                carregar();
+            });
+
+            window.calcularDepreciacao = (valor, dias) => {
+                const depreciacao = (valor * 0.01 * dias).toFixed(2);
+                document.getElementById("resultado-calculo").textContent =
+                    `Valor estimado de depreciação: R$ ${depreciacao}`;
+                document.getElementById("modal-calculo").style.display = "block";
+            };
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const dados = {
+                    modelo: form.modelo.value,
+                    marca: form.marca.value,
+                    cor: form.cor.value,
+                    placa: form.placa.value,
+                    chassis: form.chassis.value,
+                    valor: parseFloat(form.valor.value),
+                    diasRoubado: parseInt(form.diasRoubado.value),
+                    status: form.status.value
+                };
+                await fetch(API, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(dados)
+                });
+                form.reset();
+                carregar();
+            });
+
+            filtroStatus.addEventListener("change", carregar);
+            filtroBusca.addEventListener("input", carregar);
+            carregar();
+
+            document.getElementById("exportarCSV").addEventListener("click", () => {
+                const csv = [
+                    ["ID", "Modelo", "Marca", "Cor", "Placa", "Chassis", "Valor", "Dias Roubado", "Status"],
+                    ...dadosExportados.map(v => [v.id, v.modelo, v.marca, v.cor, v.placa, v.chassis, v.valor, v.diasRoubado, v.status])
+                ].map(e => e.join(",")).join("\n");
+
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "veiculos.csv";
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        });
+    </script>
+</body>
+
+</html>
